@@ -72,7 +72,7 @@ export default function Footer() {
           transition={{ duration: 0.5, delay: 0.2 }}
           viewport={{ once: true }}
         >
-          <p>&copy; 2024 Алексей Розепин. Все права защищены.</p>
+          <p>&copy; 2025 Алексей Розепин. Все права защищены.</p>
         </motion.div>
       </div>
     </footer>

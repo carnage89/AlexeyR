@@ -68,6 +68,100 @@ export class MemStorage implements IStorage {
     this.initializeDefaultContent();
   }
 
+  private initializeDefaultServices() {
+    const defaultServices = [
+      {
+        title: "Веб-разработка",
+        description: "Создание современных и отзывчивых веб-сайтов с использованием последних технологий",
+        icon: "code",
+        price: "от 25 000 ₽",
+        order: 1
+      },
+      {
+        title: "UI/UX Дизайн",
+        description: "Проектирование интуитивных пользовательских интерфейсов и улучшение пользовательского опыта",
+        icon: "palette",
+        price: "от 15 000 ₽",
+        order: 2
+      },
+      {
+        title: "Мобильные приложения",
+        description: "Разработка кроссплатформенных мобильных приложений с нативной производительностью",
+        icon: "mobile-alt",
+        price: "от 50 000 ₽",
+        order: 3
+      },
+      {
+        title: "Консультации",
+        description: "Экспертные консультации по архитектуре, технологиям и лучшим практикам разработки",
+        icon: "lightbulb",
+        price: "от 3 000 ₽/час",
+        order: 4
+      },
+      {
+        title: "Поддержка и оптимизация",
+        description: "Техническая поддержка, обновления и оптимизация существующих проектов",
+        icon: "tools",
+        price: "от 5 000 ₽",
+        order: 5
+      },
+      {
+        title: "Телеграм-боты",
+        description: "Разработка и интеграция телеграм-ботов для автоматизации бизнес-процессов",
+        icon: "robot",
+        price: "от 20 000 ₽",
+        order: 6
+      }
+    ];
+
+    defaultServices.forEach((service) => {
+      const id = randomUUID();
+      this.services.set(id, {
+        id,
+        ...service,
+        createdAt: new Date()
+      });
+    });
+  }
+
+  private initializeDefaultPortfolio() {
+    const defaultPortfolio = [
+      {
+        title: "Интернет-магазин",
+        description: "Полнофункциональная платформа электронной коммерции с админ-панелью и системой платежей",
+        image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
+        technologies: ["React", "Node.js", "PostgreSQL", "Stripe"],
+        link: "https://example-shop.com",
+        order: 1
+      },
+      {
+        title: "Корпоративный сайт",
+        description: "Современный корпоративный веб-сайт с CMS и мультиязычной поддержкой",
+        image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2015&q=80",
+        technologies: ["Next.js", "TypeScript", "Sanity CMS"],
+        link: "https://example-corp.com",
+        order: 2
+      },
+      {
+        title: "Мобильное приложение",
+        description: "Кроссплатформенное мобильное приложение для управления задачами и проектами",
+        image: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+        technologies: ["React Native", "Firebase", "Redux"],
+        link: null,
+        order: 3
+      }
+    ];
+
+    defaultPortfolio.forEach((item) => {
+      const id = randomUUID();
+      this.portfolioItems.set(id, {
+        id,
+        ...item,
+        createdAt: new Date()
+      });
+    });
+  }
+
   private initializeDefaultContent() {
     // Default site content
     const defaultContent = {
@@ -254,6 +348,10 @@ export class MemStorage implements IStorage {
 
   // Services
   async getAllServices(): Promise<Service[]> {
+    // If no services exist, reinitialize with default data
+    if (this.services.size === 0) {
+      this.initializeDefaultServices();
+    }
     return Array.from(this.services.values()).sort((a, b) => a.order - b.order);
   }
 
@@ -284,6 +382,10 @@ export class MemStorage implements IStorage {
 
   // Portfolio
   async getAllPortfolioItems(): Promise<PortfolioItem[]> {
+    // If no portfolio items exist, reinitialize with default data
+    if (this.portfolioItems.size === 0) {
+      this.initializeDefaultPortfolio();
+    }
     return Array.from(this.portfolioItems.values()).sort((a, b) => a.order - b.order);
   }
 

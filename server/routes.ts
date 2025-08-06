@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import https from "https";
 import { storage } from "./storage";
-import { 
+import {
   insertSiteContentSchema,
   insertServiceSchema,
   insertPortfolioItemSchema,
@@ -27,7 +27,7 @@ async function sendToTelegram(formData: { name: string; email: string; message: 
 💬 *Сообщение:*
 ${formData.message}
 
-⏰ *Время:* ${new Date().toLocaleString('ru-RU', { 
+⏰ *Время:* ${new Date().toLocaleString('ru-RU', {
   timeZone: 'Europe/Moscow',
   year: 'numeric',
   month: '2-digit',
@@ -54,11 +54,11 @@ ${formData.message}
 
     const req = https.request(telegramUrl, options, (res) => {
       let data = '';
-      
+
       res.on('data', (chunk) => {
         data += chunk;
       });
-      
+
       res.on('end', () => {
         try {
           const result = JSON.parse(data);
@@ -83,7 +83,7 @@ ${formData.message}
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  
+
   // Site Content Routes
   app.get("/api/content", async (req, res) => {
     try {
@@ -110,7 +110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { section } = req.params;
       const { content } = req.body;
-      
+
       const updated = await storage.updateSiteContent(section, content);
       res.json(updated);
     } catch (error) {
@@ -261,7 +261,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertContactSubmissionSchema.parse(req.body);
       const submission = await storage.createContactSubmission(validatedData);
-      
+
       // Send to Telegram
       try {
         await sendToTelegram(validatedData);
@@ -269,7 +269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Failed to send to Telegram:", telegramError);
         // Don't fail the whole request if Telegram fails
       }
-      
+
       res.status(201).json(submission);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -292,15 +292,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/auth", async (req, res) => {
     try {
       const { password } = req.body;
+
+      // Use environment variable or fallback to default
       const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
-      
+
       if (password === adminPassword) {
         res.json({ success: true, token: "admin-authenticated" });
       } else {
-        res.status(401).json({ error: "Invalid password" });
+        res.status(401).json({ success: false, message: "Invalid password" });
       }
     } catch (error) {
-      res.status(500).json({ error: "Authentication failed" });
+      console.error("Auth error:", error);
+      res.status(500).json({ success: false, message: "Server error" });
     }
   });
 

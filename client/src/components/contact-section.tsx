@@ -29,14 +29,26 @@ export default function ContactSection() {
     setIsSubmitting(true);
 
     try {
-      // Save to database and send to Telegram (handled by backend)
-      await apiRequest("POST", "/api/contact", formData);
-
-      toast({
-        title: "Успешно!",
-        description: "Ваша заявка отправлена. Я свяжусь с вами в ближайшее время.",
+      // Send to Telegram via Netlify function
+      const response = await fetch('/.netlify/functions/sendToTelegram', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
-      setFormData({ name: "", email: "", message: "" });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        toast({
+          title: "Успешно!",
+          description: "Ваша заявка отправлена. Я свяжусь с вами в ближайшее время.",
+        });
+        setFormData({ name: "", email: "", message: "" });
+      } else {
+        throw new Error(result.error || 'Ошибка отправки');
+      }
     } catch (error) {
       console.error("Form submission error:", error);
       toast({
