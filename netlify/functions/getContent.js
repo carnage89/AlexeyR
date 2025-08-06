@@ -55,7 +55,7 @@ exports.handler = async (event, context) => {
   };
 
   const content = defaultContent[section];
-  
+
   if (!content) {
     return {
       statusCode: 404,
@@ -63,7 +63,7 @@ exports.handler = async (event, context) => {
         'Access-Control-Allow-Origin': '*',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ error: 'Content not found' }),
+      body: JSON.stringify({ error: 'Content section not found' }),
     };
   }
 

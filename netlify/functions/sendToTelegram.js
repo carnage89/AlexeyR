@@ -1,3 +1,4 @@
+
 const https = require('https');
 
 exports.handler = async (event, context) => {
@@ -48,7 +49,6 @@ exports.handler = async (event, context) => {
     // Parse request body
     const { name, email, message } = JSON.parse(event.body);
 
-    // Validate required fields
     if (!name || !email || !message) {
       return {
         statusCode: 400,
@@ -56,77 +56,49 @@ exports.handler = async (event, context) => {
           'Access-Control-Allow-Origin': '*',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ error: 'Missing required fields: name, email, or message' }),
+        body: JSON.stringify({ error: 'Missing required fields' }),
       };
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return {
-        statusCode: 400,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ error: 'Invalid email format' }),
-      };
-    }
+    // Create message text
+    const messageText = `🆕 Новая заявка с сайта!\n\n👤 Имя: ${name}\n📧 Email: ${email}\n💬 Сообщение: ${message}`;
 
-    // Create Telegram message
-    const telegramMessage = `🔥 *Новая заявка с сайта!*
-
-👤 *Имя:* ${name}
-📧 *Email:* ${email}
-💬 *Сообщение:*
-${message}
-
-⏰ *Время:* ${new Date().toLocaleString('ru-RU', { 
-  timeZone: 'Europe/Moscow',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit'
-})}`;
-
-    // Prepare Telegram API request
-    const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+    // Prepare data for Telegram API
     const telegramData = JSON.stringify({
       chat_id: CHAT_ID,
-      text: telegramMessage,
-      parse_mode: 'Markdown'
+      text: messageText,
     });
 
-    // Send message to Telegram
+    // Make request to Telegram API
     const response = await new Promise((resolve, reject) => {
       const options = {
+        hostname: 'api.telegram.org',
+        port: 443,
+        path: `/bot${BOT_TOKEN}/sendMessage`,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(telegramData)
-        }
+          'Content-Length': Buffer.byteLength(telegramData),
+        },
       };
 
-      const req = https.request(telegramUrl, options, (res) => {
+      const req = https.request(options, (res) => {
         let data = '';
-        
         res.on('data', (chunk) => {
           data += chunk;
         });
-        
         res.on('end', () => {
           try {
-            const result = JSON.parse(data);
-            resolve({ statusCode: res.statusCode, data: result });
-          } catch (parseError) {
-            reject(new Error(`Failed to parse Telegram response: ${parseError.message}`));
+            const parsed = JSON.parse(data);
+            resolve({ statusCode: res.statusCode, data: parsed });
+          } catch (error) {
+            reject(error);
           }
         });
       });
 
       req.on('error', (error) => {
-        reject(new Error(`Telegram API request failed: ${error.message}`));
+        reject(error);
       });
 
       req.write(telegramData);
@@ -172,7 +144,7 @@ ${message}
       },
       body: JSON.stringify({ 
         error: 'Internal server error',
-        message: error.message
+        details: error.message
       }),
     };
   }
