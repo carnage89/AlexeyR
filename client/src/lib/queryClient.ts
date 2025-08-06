@@ -7,20 +7,50 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-export async function apiRequest(
-  method: string,
-  url: string,
-  data?: unknown | undefined,
-): Promise<Response> {
-  const res = await fetch(url, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+export async function apiRequest(method: string, endpoint: string, data?: any) {
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-  await throwIfResNotOk(res);
-  return res;
+  // Check if we're in production (Netlify) or development
+  const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+
+  let url: string;
+
+  if (isProduction) {
+    // Map API endpoints to Netlify functions
+    if (endpoint === '/api/services') {
+      url = '/.netlify/functions/getServices';
+    } else if (endpoint === '/api/portfolio') {
+      url = '/.netlify/functions/getPortfolio';
+    } else if (endpoint.startsWith('/api/content/')) {
+      const section = endpoint.replace('/api/content/', '');
+      url = `/.netlify/functions/getContent?section=${section}`;
+    } else if (endpoint === '/api/admin/auth') {
+      url = '/.netlify/functions/adminAuth';
+    } else {
+      url = endpoint; // fallback
+    }
+  } else {
+    url = `${API_BASE_URL}${endpoint}`;
+  }
+
+  const config: RequestInit = {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+
+  if (data) {
+    config.body = JSON.stringify(data);
+  }
+
+  const response = await fetch(url, config);
+
+  if (!response.ok) {
+    throw new Error(`API Error: ${response.status}`);
+  }
+
+  return response.json();
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
